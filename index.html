@@ -17,7 +17,7 @@
         <div class="w-full max-w-sm bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
             <input type="tel" id="phone" placeholder="Số điện thoại" class="w-full mb-4 px-4 py-3 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-500">
             <input type="password" id="password" placeholder="Mật khẩu (Hiện tại cứ nhập số ĐT)" class="w-full mb-6 px-4 py-3 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-500">
-            <button onclick="login()" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold transition duration-300">ĐĂNG NHẬP</button>
+            <button onclick="login()" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold transition duration-300 shadow-lg shadow-red-500/50">ĐĂNG NHẬP</button>
         </div>
     </div>
 
@@ -38,8 +38,8 @@
 
         <!-- Tabs -->
         <div class="flex bg-gray-800 shadow-md">
-            <button onclick="switchTab('tabUpload')" id="btnTabUpload" class="flex-1 py-4 text-red-500 font-bold border-b-2 border-red-500">🚀 LÊN CAM</button>
-            <button onclick="switchTab('tabEarn')" id="btnTabEarn" class="flex-1 py-4 text-gray-400 font-bold border-b-2 border-transparent">🤝 KIẾM ĐIỂM</button>
+            <button onclick="switchTab('tabUpload')" id="btnTabUpload" class="flex-1 py-4 text-red-500 font-bold border-b-2 border-red-500 transition duration-300">🚀 LÊN CAM</button>
+            <button onclick="switchTab('tabEarn')" id="btnTabEarn" class="flex-1 py-4 text-gray-400 font-bold border-b-2 border-transparent transition duration-300">🤝 KIẾM ĐIỂM</button>
         </div>
 
         <!-- TAB 1: SẢN XUẤT VIDEO -->
@@ -49,10 +49,10 @@
                 <p class="text-gray-400 text-sm mb-6">Mỗi lượt hoàn thành trừ 2 điểm. Tải 1 chạm!</p>
                 
                 <div class="flex gap-4 mb-4">
-                    <button onclick="downloadVideo()" class="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded-lg font-bold flex flex-col items-center justify-center gap-1 transition">
+                    <button onclick="downloadVideo()" class="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded-lg font-bold flex flex-col items-center justify-center gap-1 transition shadow-lg shadow-green-500/30">
                         <i class="fa-solid fa-download text-xl"></i> Tải Video
                     </button>
-                    <button onclick="copyCaption()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-3 rounded-lg font-bold flex flex-col items-center justify-center gap-1 transition">
+                    <button onclick="copyCaption()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-3 rounded-lg font-bold flex flex-col items-center justify-center gap-1 transition shadow-lg">
                         <i class="fa-solid fa-copy text-xl"></i> Copy Nội dung
                     </button>
                 </div>
@@ -86,13 +86,13 @@
 
     <script>
         // =====================================================================
-        // CHỖ ĐỂ ANH UPDATE LINK GOOGLE APPS SCRIPT KHI CÓ ĐIỀU CHỈNH
+        // ANH DÁN LINK GOOGLE APPS SCRIPT CỦA ANH VÀO ĐÂY
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx50detaTjLsOAWosDAmNw0dIK6y2qrj8PEsKtfdmiUrk15n1D_qutpy7omP53o5VLg/exec"; 
         // =====================================================================
 
         let currentPhone = localStorage.getItem("1000video_phone");
         
-        // Mock data tài nguyên (Về sau gọi API để bốc ngẫu nhiên)
+        // Mock data tài nguyên (Về sau khi gọi API, anh có thể bốc ngẫu nhiên từ Sheet)
         let currentTask = { 
             r2Link: "https://your-r2.com/vid.mp4", 
             caption: "#ThanhDatNenF0 #XuHuong Mô tả bất động sản F0 cực hot!" 
@@ -112,7 +112,7 @@
             if(!phone) return Swal.fire("Lỗi", "Vui lòng nhập số điện thoại", "error");
             
             localStorage.setItem("1000video_phone", phone);
-            localStorage.setItem("1000video_credit", "10"); // Lần đầu đăng nhập set tạm 10
+            localStorage.setItem("1000video_credit", "10"); // Cấp sẵn 10 điểm để test
             window.location.reload();
         }
 
@@ -126,32 +126,48 @@
             document.getElementById('tabEarn').classList.add('hidden');
             document.getElementById(tabId).classList.remove('hidden');
             
-            document.getElementById('btnTabUpload').className = "flex-1 py-4 font-bold text-gray-400 border-b-2 border-transparent";
-            document.getElementById('btnTabEarn').className = "flex-1 py-4 font-bold text-gray-400 border-b-2 border-transparent";
+            document.getElementById('btnTabUpload').className = "flex-1 py-4 font-bold text-gray-400 border-b-2 border-transparent transition duration-300";
+            document.getElementById('btnTabEarn').className = "flex-1 py-4 font-bold text-gray-400 border-b-2 border-transparent transition duration-300";
             
-            document.getElementById(tabId === 'tabUpload' ? 'btnTabUpload' : 'btnTabEarn').className = "flex-1 py-4 font-bold text-red-500 border-b-2 border-red-500";
+            document.getElementById(tabId === 'tabUpload' ? 'btnTabUpload' : 'btnTabEarn').className = "flex-1 py-4 font-bold text-red-500 border-b-2 border-red-500 transition duration-300";
         }
 
+        // --- CẬP NHẬT LOGIC TẢI VIDEO ---
         function downloadVideo() {
+            // Mở trực tiếp link video (Safari/Chrome sẽ hiện trình phát video)
             window.open(currentTask.r2Link, '_blank');
-            Swal.fire("Thành công", "Đã mở link tải video!", "success");
+            
+            // Hiện bảng hướng dẫn lưu thẳng vào Album Ảnh
+            Swal.fire({
+                title: "Đã mở Video!",
+                html: "Để lưu thẳng vào Album Ảnh:<br><br><b>Nhấn giữ 2 giây</b> vào video (hoặc bấm nút Chia sẻ) -> Chọn <b>Lưu Video</b> 📥",
+                icon: "info",
+                confirmButtonColor: '#dc2626', // Màu đỏ giống theme
+                confirmButtonText: 'Đã hiểu'
+            });
         }
 
         function copyCaption() {
             navigator.clipboard.writeText(currentTask.caption);
-            Swal.fire({ title: "Đã Copy", text: "Nội dung đã được lưu vào bộ nhớ tạm", icon: "success", timer: 1500, showConfirmButton: false });
+            Swal.fire({ 
+                title: "Đã Copy", 
+                text: "Nội dung đã được lưu vào bộ nhớ tạm", 
+                icon: "success", 
+                timer: 1500, 
+                showConfirmButton: false 
+            });
         }
 
         // --- GỌI API NỘP BÀI ---
         function confirmTask() {
             const linkFB = document.getElementById('linkFB').value;
             if(!linkFB.includes("facebook.com")) {
-                return Swal.fire("Lỗi Link", "Vui lòng nhập đúng link Facebook", "warning");
+                return Swal.fire("Lỗi Link", "Vui lòng nhập đúng link Facebook Reels", "warning");
             }
             
             Swal.fire({
                 title: 'Đang xử lý...',
-                text: 'Hệ thống đang lưu bài và dọn dẹp R2',
+                text: 'Hệ thống đang lưu bài và dọn dẹp không gian...',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
@@ -163,7 +179,7 @@
                 linkR2: currentTask.r2Link
             };
 
-            // Kết nối Backend
+            // Kết nối đến Google Apps Script
             fetch(GAS_URL, {
                 method: "POST",
                 body: JSON.stringify(payload)
@@ -174,18 +190,19 @@
                     localStorage.setItem("1000video_credit", data.newCredit);
                     document.getElementById('creditScore').innerText = data.newCredit;
                     document.getElementById('linkFB').value = '';
-                    Swal.fire("Hoàn tất!", "Đã trừ 2 điểm và dọn dẹp thành công.", "success");
+                    Swal.fire("Hoàn tất!", "Đã trừ 2 điểm và dọn dẹp file lưu trữ thành công.", "success");
                 } else {
                     Swal.fire("Lỗi", "Không thể cập nhật lên hệ thống", "error");
                 }
             })
             .catch(err => {
-                // Xử lý tạm khi chưa add Link GAS chuẩn
-                Swal.fire("Lỗi Kết Nối", "Hãy đảm bảo đã điền GAS_URL", "error");
+                // Xử lý tạm khi anh chưa add Link GAS chuẩn, để test giao diện
+                Swal.fire("Lỗi Kết Nối", "Vui lòng cập nhật đúng GAS_URL vào code.", "error");
             });
         }
 
         function openTeammateVideo() {
+            // Mở link ngẫu nhiên từ quỹ tương tác
             window.open("https://www.facebook.com/watch", "_blank");
             
             let timeLeft = 20;
@@ -206,7 +223,11 @@
 
         // --- GỌI API CỘNG ĐIỂM ---
         function confirmEarn() {
-            Swal.fire({ title: 'Đang cộng điểm...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            Swal.fire({ 
+                title: 'Đang cộng điểm...', 
+                allowOutsideClick: false, 
+                didOpen: () => { Swal.showLoading(); } 
+            });
 
             const payload = {
                 action: "earnCredit",
@@ -223,17 +244,17 @@
                     localStorage.setItem("1000video_credit", data.newCredit);
                     document.getElementById('creditScore').innerText = data.newCredit;
                     
-                    // Khóa lại nút
+                    // Khóa lại nút sau khi nhận thưởng
                     let btn = document.getElementById('btnConfirmComment');
                     btn.disabled = true;
                     btn.className = "w-full bg-gray-700 text-gray-500 py-4 rounded-lg font-bold cursor-not-allowed transition duration-500";
                     btn.innerHTML = `<i class="fa-solid fa-heart"></i> Đã Xem & Comment (Chờ 20s)`;
                     
-                    Swal.fire("+2 Điểm", "Cảm ơn bạn đã tương tác giúp đồng đội!", "success");
+                    Swal.fire("+2 Điểm", "Cảm ơn bạn đã tương tác giúp đồng đội lên xu hướng!", "success");
                 }
             })
             .catch(err => {
-                Swal.fire("Lỗi Kết Nối", "Hãy đảm bảo đã điền GAS_URL", "error");
+                Swal.fire("Lỗi Kết Nối", "Vui lòng cập nhật đúng GAS_URL vào code.", "error");
             });
         }
     </script>
