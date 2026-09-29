@@ -16,6 +16,7 @@
 </head>
 <body class="bg-gray-900 text-white font-sans antialiased">
 
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
     <div id="loginScreen" class="flex flex-col items-center justify-center min-h-screen p-6">
         <div class="mb-4 drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]">
             <img src="logo.png" alt="Logo Video 1000" class="w-32 h-32 object-contain">
@@ -29,6 +30,7 @@
         </div>
     </div>
 
+    <!-- MÀN HÌNH CHÍNH (DASHBOARD) -->
     <div id="dashboard" class="hidden min-h-screen flex-col">
         <header class="bg-gray-800 p-4 flex justify-between items-center shadow-md border-b border-gray-700">
             <div class="flex items-center gap-3 font-bold text-lg text-red-500">
@@ -51,7 +53,7 @@
         <div id="tabUpload" class="p-6 flex-1 bg-gray-900">
             <div class="bg-gray-800 p-5 rounded-xl text-center shadow-lg border border-gray-700">
                 <h2 class="text-xl font-bold mb-2 text-red-400">Nhiệm vụ hôm nay</h2>
-                <p class="text-gray-400 text-sm mb-6">Mỗi lượt hoàn thành trừ 2 điểm. Tải 1 chạm!</p>
+                <p id="taskInstruction" class="text-gray-400 text-sm mb-6">Mỗi lượt hoàn thành trừ 2 điểm. Tải 1 chạm!</p>
                 
                 <div class="flex gap-4 mb-4">
                     <button onclick="downloadVideo()" class="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded-lg font-bold flex flex-col items-center justify-center gap-1 transition shadow-lg shadow-green-500/30">
@@ -152,6 +154,7 @@
 
         function loadRealTask() {
             highlightSubmitSection(false); 
+            document.getElementById('taskInstruction').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...';
             
             fetch(GAS_URL, {
                 method: "POST",
@@ -166,12 +169,19 @@
                     currentTask = data.data; 
                     document.getElementById('btnTabUpload').disabled = false;
                     highlightSubmitSection(true);
+
+                    document.getElementById('taskInstruction').innerHTML = `
+                        <span class="text-yellow-400 font-semibold"><i class="fa-solid fa-bell"></i> Bạn có 1 video chờ nộp link!</span><br>
+                        <span class="text-xs text-gray-400">Có thể bấm Tải Lại nếu lỡ mất. Nhớ nộp link để nhận video mới nhé.</span>
+                    `;
                 } else if(data.status === "error") {
                     Swal.fire("Lỗi từ Hệ Thống", data.msg, "error");
                     document.getElementById('btnTabUpload').disabled = true;
+                    document.getElementById('taskInstruction').innerHTML = "Lỗi hệ thống";
                 } else {
                     Swal.fire("Thông báo", data.msg || "Tuyệt vời! Hôm nay đã hết video nhiệm vụ!", "info");
                     document.getElementById('btnTabUpload').disabled = true; 
+                    document.getElementById('taskInstruction').innerHTML = "Hoàn hảo! Bạn đã hoàn thành hết nhiệm vụ.";
                 }
             })
             .catch(err => {
@@ -196,7 +206,6 @@
             document.getElementById(tabId === 'tabUpload' ? 'btnTabUpload' : 'btnTabEarn').className = "flex-1 py-4 font-bold text-red-500 border-b-2 border-red-500 transition duration-300";
         }
 
-        // --- CÁCH VƯỢT RÀO IOS MỚI ---
         function downloadVideo() {
             if(!currentTask) return Swal.fire("Khoan đã", "Đang tải dữ liệu từ kho hoặc đã hết video!", "warning");
             
@@ -208,7 +217,6 @@
                     <div class="mb-4">
                         <video src="${videoUrl}" controls playsinline class="w-full rounded-lg bg-black"></video>
                     </div>
-                    <!-- NÚT MỚI TO ĐÙNG ĐỂ ÉP TẢI VỀ -->
                     <button onclick="forceDownload('${videoUrl}')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-lg shadow-[0_0_15px_rgba(37,99,235,0.5)] mb-3 text-lg transition-all">
                         <i class="fa-solid fa-download"></i> BẤM VÀO ĐÂY ĐỂ LƯU VIDEO
                     </button>
@@ -221,7 +229,6 @@
             });
         }
 
-        // HÀM NGẦM TẢI VIDEO XUỐNG BỘ NHỚ VÀ ĐẨY VÀO ALBUM
         window.forceDownload = async function(url) {
             Swal.fire({
                 title: 'Đang tải video về máy...',
@@ -231,15 +238,13 @@
             });
 
             try {
-                // 1. Kéo file từ R2 về RAM trình duyệt
                 const response = await fetch(url);
                 if (!response.ok) throw new Error("Network error");
                 const blob = await response.blob();
-
+                
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
                 if (isIOS && navigator.share) {
-                    // 2. Kích hoạt Bảng Share thần thánh của iOS
                     const file = new File([blob], "Video1000.mp4", { type: "video/mp4" });
                     Swal.close();
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -252,7 +257,6 @@
                         throw new Error("Không hỗ trợ share");
                     }
                 } else {
-                    // Xử lý cho Android và PC
                     const fileUrl = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.style.display = 'none';
@@ -266,10 +270,9 @@
                 }
             } catch (e) {
                 console.error(e);
-                // Nếu lỗi CORS từ R2, chuyển hướng phương án B
                 Swal.fire({
                     title: "Bị chặn tải ngầm",
-                    text: "Hệ thống sẽ mở sang tab mới. Hãy bấm biểu tượng Chia Sẻ (vuông có mũi tên) ở dưới cùng Safari -> Chọn 'Lưu vào tệp'.",
+                    text: "Hệ thống sẽ mở sang tab mới. Hãy bấm biểu tượng Chia Sẻ (vuông có mũi tên) ở dưới cùng Safari -> Chọn 'Lưu vào tệp' hoặc 'Lưu Video'.",
                     icon: "warning",
                     confirmButtonText: "Mở Tab Mới"
                 }).then(() => {
@@ -327,21 +330,44 @@
         }
 
         function openTeammateVideo() {
-            window.open("https://www.facebook.com/watch", "_blank");
-            let timeLeft = 20;
-            let btn = document.getElementById('btnConfirmComment');
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Vui lòng tương tác, chờ ${timeLeft}s...`;
-            
-            let timer = setInterval(() => {
-                timeLeft--;
-                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Vui lòng tương tác, chờ ${timeLeft}s...`;
-                if(timeLeft <= 0) {
-                    clearInterval(timer);
-                    btn.disabled = false;
-                    btn.className = "w-full bg-pink-600 hover:bg-pink-500 text-white py-4 rounded-lg font-bold shadow-lg shadow-pink-500/50 transition cursor-pointer";
-                    btn.innerHTML = `<i class="fa-solid fa-gift"></i> Đã Xem & Comment (+2 Điểm)`;
+            Swal.fire({
+                title: 'Đang tìm video đồng đội...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "getTeammateTask", phone: currentPhone })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === "success") {
+                    Swal.close();
+                    
+                    window.open(data.link, "_blank");
+                    
+                    let timeLeft = 20;
+                    let btn = document.getElementById('btnConfirmComment');
+                    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Vui lòng tương tác, chờ ${timeLeft}s...`;
+                    
+                    let timer = setInterval(() => {
+                        timeLeft--;
+                        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Vui lòng tương tác, chờ ${timeLeft}s...`;
+                        if(timeLeft <= 0) {
+                            clearInterval(timer);
+                            btn.disabled = false;
+                            btn.className = "w-full bg-pink-600 hover:bg-pink-500 text-white py-4 rounded-lg font-bold shadow-lg shadow-pink-500/50 transition cursor-pointer";
+                            btn.innerHTML = `<i class="fa-solid fa-gift"></i> Đã Xem & Comment (+2 Điểm)`;
+                        }
+                    }, 1000);
+                } else {
+                    Swal.fire("Thông báo", data.msg || "Hiện tại chưa có video nào cần tương tác!", "info");
                 }
-            }, 1000);
+            })
+            .catch(err => {
+                Swal.fire("Lỗi API", "Không lấy được video đồng đội.", "error");
+            });
         }
 
         function confirmEarn() {
