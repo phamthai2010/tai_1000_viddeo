@@ -1,10 +1,15 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tải 1000 video</title>
+    <title>Video 1000</title>
+    
+    <!-- Code giúp hiển thị Logo trên Cả Web và Màn hình chính iPhone -->
     <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="apple-mobile-web-app-title" content="Video 1000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,24 +17,26 @@
 </head>
 <body class="bg-gray-900 text-white font-sans antialiased">
 
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
     <div id="loginScreen" class="flex flex-col items-center justify-center min-h-screen p-6">
         <div class="mb-4 drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]">
-            <img src="logo.png" alt="Logo Tải 1000 Video" class="w-28 h-28 object-contain">
+            <img src="logo.png" alt="Logo Video 1000" class="w-32 h-32 object-contain">
         </div>
-        <h1 class="text-3xl font-bold mb-8 tracking-wider">TẢI 1000 VIDEO</h1>
+        <h1 class="text-4xl font-bold mb-8 tracking-wider text-red-500">VIDEO 1000</h1>
         
         <div class="w-full max-w-sm bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
             <input type="tel" id="phone" placeholder="Số điện thoại" class="w-full mb-4 px-4 py-3 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-500">
-            <input type="password" id="password" placeholder="Mật khẩu (Hiện tại cứ nhập số ĐT)" class="w-full mb-6 px-4 py-3 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-500">
+            <input type="password" id="password" placeholder="Mật khẩu" class="w-full mb-6 px-4 py-3 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-500">
             <button onclick="login()" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold transition duration-300 shadow-lg shadow-red-500/50">ĐĂNG NHẬP</button>
         </div>
     </div>
 
+    <!-- MÀN HÌNH CHÍNH (DASHBOARD) -->
     <div id="dashboard" class="hidden min-h-screen flex-col">
         <header class="bg-gray-800 p-4 flex justify-between items-center shadow-md border-b border-gray-700">
-            <div class="flex items-center gap-3 font-bold text-lg">
+            <div class="flex items-center gap-3 font-bold text-lg text-red-500">
                 <img src="logo.png" alt="Logo" class="w-8 h-8 object-contain"> 
-                Tải 1000 video
+                Video 1000
             </div>
             <div class="flex gap-4 items-center">
                 <span class="text-yellow-400 font-bold bg-gray-700 px-3 py-1 rounded-full shadow-inner">
@@ -44,6 +51,7 @@
             <button onclick="switchTab('tabEarn')" id="btnTabEarn" class="flex-1 py-4 text-gray-400 font-bold border-b-2 border-transparent transition duration-300">🤝 KIẾM ĐIỂM</button>
         </div>
 
+        <!-- TAB LÊN CAM -->
         <div id="tabUpload" class="p-6 flex-1 bg-gray-900">
             <div class="bg-gray-800 p-5 rounded-xl text-center shadow-lg border border-gray-700">
                 <h2 class="text-xl font-bold mb-2 text-red-400">Nhiệm vụ hôm nay</h2>
@@ -68,6 +76,7 @@
             </div>
         </div>
 
+        <!-- TAB KIẾM ĐIỂM -->
         <div id="tabEarn" class="hidden p-6 flex-1 bg-gray-900">
             <div class="bg-gray-800 p-5 rounded-xl text-center shadow-lg border border-gray-700">
                 <h2 class="text-xl font-bold mb-2 text-pink-400">Tương tác đồng đội</h2>
@@ -87,10 +96,10 @@
     <script>
         // =====================================================================
         // ANH DÁN LINK GOOGLE APPS SCRIPT CỦA ANH VÀO ĐÂY:
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzrLwS2Azj_z40EgU6e2d2r8SLXxRhyKbrTKI2MBlW_NuoUOQ-KRyxfkjPMc-AbIcIo/exec"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzaXl3sQHI_aULsCAhtbwWzOCg1mcXW1Ca3C2_7T4451M0EcB7lUgRqEbWVBTP9k1uq/exec"; 
         // =====================================================================
 
-        let currentPhone = localStorage.getItem("1000video_phone");
+        let currentPhone = localStorage.getItem("video1000_phone");
         let currentTask = null; 
 
         window.onload = () => {
@@ -98,11 +107,37 @@
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
                 document.getElementById('dashboard').classList.add('flex');
-                document.getElementById('creditScore').innerText = localStorage.getItem("1000video_credit") || "10";
+                document.getElementById('creditScore').innerText = localStorage.getItem("video1000_credit") || "0";
                 
                 loadRealTask(); 
             }
         };
+
+        // Hàm Đăng Nhập thật
+        function login() {
+            const phone = document.getElementById('phone').value;
+            const pass = document.getElementById('password').value;
+            
+            if(!phone || !pass) return Swal.fire("Lỗi", "Vui lòng nhập số điện thoại và mật khẩu", "warning");
+
+            Swal.fire({ title: 'Đang kiểm tra...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "login", phone: phone, pass: pass })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === "success") {
+                    localStorage.setItem("video1000_phone", phone);
+                    localStorage.setItem("video1000_credit", data.credit); 
+                    window.location.reload();
+                } else {
+                    Swal.fire("Truy cập từ chối", data.msg, "error"); // Sai pass bị văng
+                }
+            })
+            .catch(err => Swal.fire("Lỗi Kết Nối", "Vui lòng kiểm tra lại mạng hoặc link GAS.", "error"));
+        }
 
         function loadRealTask() {
             fetch(GAS_URL, {
@@ -121,16 +156,9 @@
             .catch(err => console.log("Lỗi tải nhiệm vụ", err));
         }
 
-        function login() {
-            const phone = document.getElementById('phone').value;
-            if(!phone) return Swal.fire("Lỗi", "Vui lòng nhập số điện thoại", "error");
-            localStorage.setItem("1000video_phone", phone);
-            localStorage.setItem("1000video_credit", "10"); 
-            window.location.reload();
-        }
-
         function logout() {
-            localStorage.removeItem("1000video_phone");
+            localStorage.removeItem("video1000_phone");
+            localStorage.removeItem("video1000_credit");
             window.location.reload();
         }
 
@@ -191,7 +219,7 @@
             .then(response => response.json())
             .then(data => {
                 if(data.status === "success") {
-                    localStorage.setItem("1000video_credit", data.newCredit);
+                    localStorage.setItem("video1000_credit", data.newCredit);
                     document.getElementById('creditScore').innerText = data.newCredit;
                     document.getElementById('linkFB').value = '';
                     Swal.fire("Hoàn tất!", "Đã trừ 2 điểm và dọn dẹp không gian.", "success");
@@ -201,9 +229,6 @@
                 } else {
                     Swal.fire("Lỗi", "Không thể nộp bài", "error");
                 }
-            })
-            .catch(err => {
-                Swal.fire("Lỗi Kết Nối", "Vui lòng kiểm tra lại link Google Apps Script.", "error");
             });
         }
 
@@ -235,7 +260,7 @@
             .then(response => response.json())
             .then(data => {
                 if(data.status === "success") {
-                    localStorage.setItem("1000video_credit", data.newCredit);
+                    localStorage.setItem("video1000_credit", data.newCredit);
                     document.getElementById('creditScore').innerText = data.newCredit;
                     
                     let btn = document.getElementById('btnConfirmComment');
@@ -245,9 +270,6 @@
                     
                     Swal.fire("+2 Điểm", "Cảm ơn bạn đã tương tác giúp đồng đội lên xu hướng!", "success");
                 }
-            })
-            .catch(err => {
-                Swal.fire("Lỗi Kết Nối", "Vui lòng kiểm tra lại link Google Apps Script.", "error");
             });
         }
     </script>
