@@ -1,19 +1,23 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tải 1000 video</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gray-900 text-white font-sans antialiased">
 
-    <!-- MÀN HÌNH ĐĂNG NHẬP -->
     <div id="loginScreen" class="flex flex-col items-center justify-center min-h-screen p-6">
-        <div class="text-6xl text-red-600 mb-4 drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]"><i class="fa-solid fa-clapperboard"></i></div>
+        <div class="mb-4 drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]">
+            <img src="logo.png" alt="Logo Tải 1000 Video" class="w-28 h-28 object-contain">
+        </div>
         <h1 class="text-3xl font-bold mb-8 tracking-wider">TẢI 1000 VIDEO</h1>
+        
         <div class="w-full max-w-sm bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
             <input type="tel" id="phone" placeholder="Số điện thoại" class="w-full mb-4 px-4 py-3 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-500">
             <input type="password" id="password" placeholder="Mật khẩu (Hiện tại cứ nhập số ĐT)" class="w-full mb-6 px-4 py-3 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-500">
@@ -21,12 +25,11 @@
         </div>
     </div>
 
-    <!-- MÀN HÌNH CHÍNH (DASHBOARD) -->
     <div id="dashboard" class="hidden min-h-screen flex-col">
-        <!-- Header -->
         <header class="bg-gray-800 p-4 flex justify-between items-center shadow-md border-b border-gray-700">
-            <div class="flex items-center gap-2 font-bold text-lg">
-                <i class="fa-solid fa-clapperboard text-red-500"></i> Tải 1000 video
+            <div class="flex items-center gap-3 font-bold text-lg">
+                <img src="logo.png" alt="Logo" class="w-8 h-8 object-contain"> 
+                Tải 1000 video
             </div>
             <div class="flex gap-4 items-center">
                 <span class="text-yellow-400 font-bold bg-gray-700 px-3 py-1 rounded-full shadow-inner">
@@ -36,13 +39,11 @@
             </div>
         </header>
 
-        <!-- Tabs -->
         <div class="flex bg-gray-800 shadow-md">
             <button onclick="switchTab('tabUpload')" id="btnTabUpload" class="flex-1 py-4 text-red-500 font-bold border-b-2 border-red-500 transition duration-300">🚀 LÊN CAM</button>
             <button onclick="switchTab('tabEarn')" id="btnTabEarn" class="flex-1 py-4 text-gray-400 font-bold border-b-2 border-transparent transition duration-300">🤝 KIẾM ĐIỂM</button>
         </div>
 
-        <!-- TAB 1: SẢN XUẤT VIDEO -->
         <div id="tabUpload" class="p-6 flex-1 bg-gray-900">
             <div class="bg-gray-800 p-5 rounded-xl text-center shadow-lg border border-gray-700">
                 <h2 class="text-xl font-bold mb-2 text-red-400">Nhiệm vụ hôm nay</h2>
@@ -67,7 +68,6 @@
             </div>
         </div>
 
-        <!-- TAB 2: KIẾM ĐIỂM (TƯƠNG TÁC) -->
         <div id="tabEarn" class="hidden p-6 flex-1 bg-gray-900">
             <div class="bg-gray-800 p-5 rounded-xl text-center shadow-lg border border-gray-700">
                 <h2 class="text-xl font-bold mb-2 text-pink-400">Tương tác đồng đội</h2>
@@ -86,17 +86,12 @@
 
     <script>
         // =====================================================================
-        // ANH DÁN LINK GOOGLE APPS SCRIPT CỦA ANH VÀO ĐÂY
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbx50detaTjLsOAWosDAmNw0dIK6y2qrj8PEsKtfdmiUrk15n1D_qutpy7omP53o5VLg/exec"; 
+        // ANH DÁN LINK GOOGLE APPS SCRIPT CỦA ANH VÀO ĐÂY:
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzrLwS2Azj_z40EgU6e2d2r8SLXxRhyKbrTKI2MBlW_NuoUOQ-KRyxfkjPMc-AbIcIo/exec"; 
         // =====================================================================
 
         let currentPhone = localStorage.getItem("1000video_phone");
-        
-        // Mock data tài nguyên (Về sau khi gọi API, anh có thể bốc ngẫu nhiên từ Sheet)
-        let currentTask = { 
-            r2Link: "https://your-r2.com/vid.mp4", 
-            caption: "#ThanhDatNenF0 #XuHuong Mô tả bất động sản F0 cực hot!" 
-        };
+        let currentTask = null; 
 
         window.onload = () => {
             if(currentPhone) {
@@ -104,15 +99,33 @@
                 document.getElementById('dashboard').classList.remove('hidden');
                 document.getElementById('dashboard').classList.add('flex');
                 document.getElementById('creditScore').innerText = localStorage.getItem("1000video_credit") || "10";
+                
+                loadRealTask(); 
             }
         };
+
+        function loadRealTask() {
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "getTask" })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === "success") {
+                    currentTask = data.data; 
+                } else {
+                    Swal.fire("Thông báo", data.msg || "Hôm nay đã hết video nhiệm vụ!", "info");
+                    document.getElementById('btnTabUpload').disabled = true; 
+                }
+            })
+            .catch(err => console.log("Lỗi tải nhiệm vụ", err));
+        }
 
         function login() {
             const phone = document.getElementById('phone').value;
             if(!phone) return Swal.fire("Lỗi", "Vui lòng nhập số điện thoại", "error");
-            
             localStorage.setItem("1000video_phone", phone);
-            localStorage.setItem("1000video_credit", "10"); // Cấp sẵn 10 điểm để test
+            localStorage.setItem("1000video_credit", "10"); 
             window.location.reload();
         }
 
@@ -132,57 +145,48 @@
             document.getElementById(tabId === 'tabUpload' ? 'btnTabUpload' : 'btnTabEarn').className = "flex-1 py-4 font-bold text-red-500 border-b-2 border-red-500 transition duration-300";
         }
 
-        // --- CẬP NHẬT LOGIC TẢI VIDEO ---
         function downloadVideo() {
-            // Mở trực tiếp link video (Safari/Chrome sẽ hiện trình phát video)
-            window.open(currentTask.r2Link, '_blank');
+            if(!currentTask) return Swal.fire("Khoan đã", "Đang tải dữ liệu từ kho hoặc đã hết video!", "warning");
             
-            // Hiện bảng hướng dẫn lưu thẳng vào Album Ảnh
+            window.open(currentTask.linkR2, '_blank');
             Swal.fire({
                 title: "Đã mở Video!",
                 html: "Để lưu thẳng vào Album Ảnh:<br><br><b>Nhấn giữ 2 giây</b> vào video (hoặc bấm nút Chia sẻ) -> Chọn <b>Lưu Video</b> 📥",
                 icon: "info",
-                confirmButtonColor: '#dc2626', // Màu đỏ giống theme
+                confirmButtonColor: '#dc2626',
                 confirmButtonText: 'Đã hiểu'
             });
         }
 
         function copyCaption() {
+            if(!currentTask) return Swal.fire("Khoan đã", "Chưa có nội dung!", "warning");
+            
             navigator.clipboard.writeText(currentTask.caption);
-            Swal.fire({ 
-                title: "Đã Copy", 
-                text: "Nội dung đã được lưu vào bộ nhớ tạm", 
-                icon: "success", 
-                timer: 1500, 
-                showConfirmButton: false 
-            });
+            Swal.fire({ title: "Đã Copy", text: "Nội dung đã được lưu vào bộ nhớ tạm", icon: "success", timer: 1500, showConfirmButton: false });
         }
 
-        // --- GỌI API NỘP BÀI ---
         function confirmTask() {
+            if(!currentTask) return;
             const linkFB = document.getElementById('linkFB').value;
             if(!linkFB.includes("facebook.com")) {
                 return Swal.fire("Lỗi Link", "Vui lòng nhập đúng link Facebook Reels", "warning");
             }
             
             Swal.fire({
-                title: 'Đang xử lý...',
-                text: 'Hệ thống đang lưu bài và dọn dẹp không gian...',
+                title: 'Đang nộp bài...',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            const payload = {
-                action: "submitTask",
-                phone: currentPhone,
-                linkFB: linkFB,
-                linkR2: currentTask.r2Link
-            };
-
-            // Kết nối đến Google Apps Script
             fetch(GAS_URL, {
                 method: "POST",
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    action: "submitTask",
+                    phone: currentPhone,
+                    linkFB: linkFB,
+                    videoID: currentTask.videoID,
+                    linkR2: currentTask.linkR2
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -190,21 +194,21 @@
                     localStorage.setItem("1000video_credit", data.newCredit);
                     document.getElementById('creditScore').innerText = data.newCredit;
                     document.getElementById('linkFB').value = '';
-                    Swal.fire("Hoàn tất!", "Đã trừ 2 điểm và dọn dẹp file lưu trữ thành công.", "success");
+                    Swal.fire("Hoàn tất!", "Đã trừ 2 điểm và dọn dẹp không gian.", "success");
+                    
+                    currentTask = null;
+                    loadRealTask();
                 } else {
-                    Swal.fire("Lỗi", "Không thể cập nhật lên hệ thống", "error");
+                    Swal.fire("Lỗi", "Không thể nộp bài", "error");
                 }
             })
             .catch(err => {
-                // Xử lý tạm khi anh chưa add Link GAS chuẩn, để test giao diện
-                Swal.fire("Lỗi Kết Nối", "Vui lòng cập nhật đúng GAS_URL vào code.", "error");
+                Swal.fire("Lỗi Kết Nối", "Vui lòng kiểm tra lại link Google Apps Script.", "error");
             });
         }
 
         function openTeammateVideo() {
-            // Mở link ngẫu nhiên từ quỹ tương tác
             window.open("https://www.facebook.com/watch", "_blank");
-            
             let timeLeft = 20;
             let btn = document.getElementById('btnConfirmComment');
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Vui lòng tương tác, chờ ${timeLeft}s...`;
@@ -221,22 +225,12 @@
             }, 1000);
         }
 
-        // --- GỌI API CỘNG ĐIỂM ---
         function confirmEarn() {
-            Swal.fire({ 
-                title: 'Đang cộng điểm...', 
-                allowOutsideClick: false, 
-                didOpen: () => { Swal.showLoading(); } 
-            });
-
-            const payload = {
-                action: "earnCredit",
-                phone: currentPhone
-            };
+            Swal.fire({ title: 'Đang cộng điểm...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
             fetch(GAS_URL, {
                 method: "POST",
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ action: "earnCredit", phone: currentPhone })
             })
             .then(response => response.json())
             .then(data => {
@@ -244,7 +238,6 @@
                     localStorage.setItem("1000video_credit", data.newCredit);
                     document.getElementById('creditScore').innerText = data.newCredit;
                     
-                    // Khóa lại nút sau khi nhận thưởng
                     let btn = document.getElementById('btnConfirmComment');
                     btn.disabled = true;
                     btn.className = "w-full bg-gray-700 text-gray-500 py-4 rounded-lg font-bold cursor-not-allowed transition duration-500";
@@ -254,7 +247,7 @@
                 }
             })
             .catch(err => {
-                Swal.fire("Lỗi Kết Nối", "Vui lòng cập nhật đúng GAS_URL vào code.", "error");
+                Swal.fire("Lỗi Kết Nối", "Vui lòng kiểm tra lại link Google Apps Script.", "error");
             });
         }
     </script>
