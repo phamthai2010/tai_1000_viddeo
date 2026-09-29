@@ -62,7 +62,6 @@
                     </button>
                 </div>
 
-                <!-- KHU VỰC NỘP BÀI SẼ ĐƯỢC BẬT VIỀN SÁNG BẰNG JAVASCRIPT -->
                 <div id="submitSection" class="mt-8 text-left border-t border-gray-700 pt-6 rounded-lg p-2 transition-all duration-500">
                     <label id="submitLabel" class="text-sm font-semibold text-gray-300">Nộp Link Facebook Reels đã đăng:</label>
                     <input type="url" id="linkFB" placeholder="https://www.facebook.com/reel/..." class="w-full mt-2 mb-4 px-4 py-3 bg-gray-700 rounded focus:ring-2 focus:ring-red-500 outline-none transition-all">
@@ -109,17 +108,14 @@
             }
         };
 
-        // Hàm bật viền sáng và nhắc nhở
         function highlightSubmitSection(isActive) {
             const section = document.getElementById('submitSection');
             const label = document.getElementById('submitLabel');
             if(isActive) {
-                // Bật viền đỏ, hiệu ứng nhịp tim (pulse), và đổ bóng phát sáng
                 section.classList.add('ring-2', 'ring-red-500', 'shadow-[0_0_20px_rgba(239,68,68,0.4)]', 'bg-gray-800');
                 label.innerHTML = "⚠️ Vui lòng dán link FB và Xác nhận để nhận video tiếp theo!";
                 label.classList.add('text-red-400');
             } else {
-                // Trả về trạng thái bình thường
                 section.classList.remove('ring-2', 'ring-red-500', 'shadow-[0_0_20px_rgba(239,68,68,0.4)]', 'bg-gray-800');
                 label.innerHTML = "Nộp Link Facebook Reels đã đăng:";
                 label.classList.remove('text-red-400');
@@ -151,11 +147,11 @@
                     Swal.fire("Truy cập từ chối", data.msg, "error"); 
                 }
             })
-            .catch(err => Swal.fire("Lỗi Kết Nối", "Không thể gọi API.", "error"));
+            .catch(err => Swal.fire("Lỗi Kết Nối", "Không thể gọi API. Anh hãy chắc chắn đã chọn BẤT KỲ AI (Anyone) khi Deploy Apps Script.", "error"));
         }
 
         function loadRealTask() {
-            highlightSubmitSection(false); // Tắt viền sáng khi đang tải
+            highlightSubmitSection(false); 
             
             fetch(GAS_URL, {
                 method: "POST",
@@ -169,10 +165,7 @@
                 if(data.status === "success") {
                     currentTask = data.data; 
                     document.getElementById('btnTabUpload').disabled = false;
-                    
-                    // Bật viền báo hiệu để nhắc nhân viên làm xong mới được nhận tiếp
                     highlightSubmitSection(true);
-                    
                 } else if(data.status === "error") {
                     Swal.fire("Lỗi từ Hệ Thống", data.msg, "error");
                     document.getElementById('btnTabUpload').disabled = true;
@@ -203,27 +196,84 @@
             document.getElementById(tabId === 'tabUpload' ? 'btnTabUpload' : 'btnTabEarn').className = "flex-1 py-4 font-bold text-red-500 border-b-2 border-red-500 transition duration-300";
         }
 
-        // --- CÁCH XỬ LÝ IPHONE MỚI ---
+        // --- CÁCH VƯỢT RÀO IOS MỚI ---
         function downloadVideo() {
             if(!currentTask) return Swal.fire("Khoan đã", "Đang tải dữ liệu từ kho hoặc đã hết video!", "warning");
             
-            // Nhắc nhở tinh tế nếu họ tải lại video đang làm dở
-            const linkFB = document.getElementById('linkFB').value;
-            if(linkFB === "") {
+            const videoUrl = currentTask.linkR2;
+
+            Swal.fire({
+                title: "Trạm Tải Video",
+                html: `
+                    <div class="mb-4">
+                        <video src="${videoUrl}" controls playsinline class="w-full rounded-lg bg-black"></video>
+                    </div>
+                    <!-- NÚT MỚI TO ĐÙNG ĐỂ ÉP TẢI VỀ -->
+                    <button onclick="forceDownload('${videoUrl}')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-lg shadow-[0_0_15px_rgba(37,99,235,0.5)] mb-3 text-lg transition-all">
+                        <i class="fa-solid fa-download"></i> BẤM VÀO ĐÂY ĐỂ LƯU VIDEO
+                    </button>
+                    <div class="text-left text-sm text-gray-600 bg-gray-100 p-3 rounded-lg border border-gray-300">
+                        <p><b>🍎 Nếu dùng iPhone:</b> Bấm nút xanh ở trên -> Đợi tải vài giây -> Bảng tùy chọn hiện ra -> Kéo xuống chọn <b>Lưu Video (Save Video) 📥</b>.</p>
+                    </div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+            });
+        }
+
+        // HÀM NGẦM TẢI VIDEO XUỐNG BỘ NHỚ VÀ ĐẨY VÀO ALBUM
+        window.forceDownload = async function(url) {
+            Swal.fire({
+                title: 'Đang tải video về máy...',
+                text: 'Xin đừng đóng màn hình. Tốc độ phụ thuộc vào mạng của bạn.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                // 1. Kéo file từ R2 về RAM trình duyệt
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Network error");
+                const blob = await response.blob();
+
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+                if (isIOS && navigator.share) {
+                    // 2. Kích hoạt Bảng Share thần thánh của iOS
+                    const file = new File([blob], "Video1000.mp4", { type: "video/mp4" });
+                    Swal.close();
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Lưu Video 1000'
+                        });
+                        Swal.fire("Hoàn tất", "Kiểm tra Album ảnh của bạn nhé!", "success");
+                    } else {
+                        throw new Error("Không hỗ trợ share");
+                    }
+                } else {
+                    // Xử lý cho Android và PC
+                    const fileUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = fileUrl;
+                    a.download = "Video1000_" + Date.now() + ".mp4";
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(fileUrl);
+                    Swal.close();
+                    Swal.fire("Thành công", "Đã tải video xuống máy!", "success");
+                }
+            } catch (e) {
+                console.error(e);
+                // Nếu lỗi CORS từ R2, chuyển hướng phương án B
                 Swal.fire({
-                    title: "Trạm Tải Video",
-                    html: `
-                        <div class="mb-4">
-                            <!-- Bật playsinline để iPhone không phóng to chiếm quyền -->
-                            <video src="${currentTask.linkR2}" controls playsinline class="w-full rounded-lg bg-black"></video>
-                        </div>
-                        <div class="text-left text-sm text-gray-600 bg-gray-100 p-3 rounded-lg border border-gray-300">
-                            <p class="mb-2"><b>🍎 iPhone/iPad:</b> Bấm Play, sau đó <b>chạm giữ 2 giây</b> vào video -> Chọn <b>Lưu Video</b> 📥</p>
-                            <p><b>🤖 Android:</b> Bấm vào biểu tượng <b>⋮</b> góc dưới video -> Chọn <b>Tải xuống</b>.</p>
-                        </div>
-                    `,
-                    showCloseButton: true,
-                    showConfirmButton: false,
+                    title: "Bị chặn tải ngầm",
+                    text: "Hệ thống sẽ mở sang tab mới. Hãy bấm biểu tượng Chia Sẻ (vuông có mũi tên) ở dưới cùng Safari -> Chọn 'Lưu vào tệp'.",
+                    icon: "warning",
+                    confirmButtonText: "Mở Tab Mới"
+                }).then(() => {
+                    window.open(url, '_blank');
                 });
             }
         }
@@ -268,8 +318,8 @@
                     Swal.fire("Hoàn tất!", "Đã nộp bài thành công. Hệ thống đang lấy video tiếp theo...", "success");
                     
                     currentTask = null;
-                    highlightSubmitSection(false); // Tắt viền sáng
-                    loadRealTask(); // Bốc video mới
+                    highlightSubmitSection(false); 
+                    loadRealTask(); 
                 } else {
                     Swal.fire("Lỗi", "Không thể nộp bài", "error");
                 }
