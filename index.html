@@ -62,10 +62,11 @@
                     </button>
                 </div>
 
-                <div class="mt-8 text-left border-t border-gray-700 pt-6">
-                    <label class="text-sm font-semibold text-gray-300">Nộp Link Facebook Reels đã đăng:</label>
-                    <input type="url" id="linkFB" placeholder="https://www.facebook.com/reel/..." class="w-full mt-2 mb-4 px-4 py-3 bg-gray-700 rounded focus:ring-2 focus:ring-red-500 outline-none">
-                    <button onclick="confirmTask()" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold shadow-lg shadow-red-500/30 transition">
+                <!-- KHU VỰC NỘP BÀI SẼ ĐƯỢC BẬT VIỀN SÁNG BẰNG JAVASCRIPT -->
+                <div id="submitSection" class="mt-8 text-left border-t border-gray-700 pt-6 rounded-lg p-2 transition-all duration-500">
+                    <label id="submitLabel" class="text-sm font-semibold text-gray-300">Nộp Link Facebook Reels đã đăng:</label>
+                    <input type="url" id="linkFB" placeholder="https://www.facebook.com/reel/..." class="w-full mt-2 mb-4 px-4 py-3 bg-gray-700 rounded focus:ring-2 focus:ring-red-500 outline-none transition-all">
+                    <button onclick="confirmTask()" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold shadow-lg shadow-red-500/30 transition-all">
                         ✅ Xác nhận Đã Đăng & Xóa
                     </button>
                 </div>
@@ -108,6 +109,23 @@
             }
         };
 
+        // Hàm bật viền sáng và nhắc nhở
+        function highlightSubmitSection(isActive) {
+            const section = document.getElementById('submitSection');
+            const label = document.getElementById('submitLabel');
+            if(isActive) {
+                // Bật viền đỏ, hiệu ứng nhịp tim (pulse), và đổ bóng phát sáng
+                section.classList.add('ring-2', 'ring-red-500', 'shadow-[0_0_20px_rgba(239,68,68,0.4)]', 'bg-gray-800');
+                label.innerHTML = "⚠️ Vui lòng dán link FB và Xác nhận để nhận video tiếp theo!";
+                label.classList.add('text-red-400');
+            } else {
+                // Trả về trạng thái bình thường
+                section.classList.remove('ring-2', 'ring-red-500', 'shadow-[0_0_20px_rgba(239,68,68,0.4)]', 'bg-gray-800');
+                label.innerHTML = "Nộp Link Facebook Reels đã đăng:";
+                label.classList.remove('text-red-400');
+            }
+        }
+
         function login() {
             const phone = document.getElementById('phone').value;
             const pass = document.getElementById('password').value;
@@ -133,19 +151,15 @@
                     Swal.fire("Truy cập từ chối", data.msg, "error"); 
                 }
             })
-            .catch(err => Swal.fire("Lỗi Kết Nối", "Không thể gọi API. Anh hãy chắc chắn đã chọn BẤT KỲ AI (Anyone) khi Deploy Apps Script.", "error"));
+            .catch(err => Swal.fire("Lỗi Kết Nối", "Không thể gọi API.", "error"));
         }
 
-        // --- Cập nhật hàm này để báo lỗi rõ ràng nếu lấy video thất bại ---
         function loadRealTask() {
-            if(GAS_URL.includes("DÁN_LINK")) {
-                Swal.fire("Lỗi mã nguồn", "Bạn chưa dán link GAS_URL vào code HTML!", "error");
-                return;
-            }
-
+            highlightSubmitSection(false); // Tắt viền sáng khi đang tải
+            
             fetch(GAS_URL, {
                 method: "POST",
-                body: JSON.stringify({ action: "getTask" })
+                body: JSON.stringify({ action: "getTask", phone: currentPhone })
             })
             .then(response => {
                 if(!response.ok) throw new Error("Lỗi mạng lưới");
@@ -154,8 +168,12 @@
             .then(data => {
                 if(data.status === "success") {
                     currentTask = data.data; 
+                    document.getElementById('btnTabUpload').disabled = false;
+                    
+                    // Bật viền báo hiệu để nhắc nhân viên làm xong mới được nhận tiếp
+                    highlightSubmitSection(true);
+                    
                 } else if(data.status === "error") {
-                    // Nếu lỗi do phiên bản cũ hoặc Sheet hỏng, sẽ văng thông báo này
                     Swal.fire("Lỗi từ Hệ Thống", data.msg, "error");
                     document.getElementById('btnTabUpload').disabled = true;
                 } else {
@@ -164,8 +182,7 @@
                 }
             })
             .catch(err => {
-                Swal.fire("Lỗi API Phiên Bản", "App không lấy được video. Khả năng cao anh chưa chọn 'Phiên bản mới' (New version) khi Deploy bên Google Apps Script.", "error");
-                console.log("Chi tiết lỗi:", err);
+                Swal.fire("Lỗi API", "Không lấy được dữ liệu.", "error");
             });
         }
 
@@ -186,17 +203,29 @@
             document.getElementById(tabId === 'tabUpload' ? 'btnTabUpload' : 'btnTabEarn').className = "flex-1 py-4 font-bold text-red-500 border-b-2 border-red-500 transition duration-300";
         }
 
+        // --- CÁCH XỬ LÝ IPHONE MỚI ---
         function downloadVideo() {
             if(!currentTask) return Swal.fire("Khoan đã", "Đang tải dữ liệu từ kho hoặc đã hết video!", "warning");
             
-            window.open(currentTask.linkR2, '_blank');
-            Swal.fire({
-                title: "Đã mở Video!",
-                html: "Để lưu thẳng vào Album Ảnh:<br><br><b>Nhấn giữ 2 giây</b> vào video (hoặc bấm nút Chia sẻ) -> Chọn <b>Lưu Video</b> 📥",
-                icon: "info",
-                confirmButtonColor: '#dc2626',
-                confirmButtonText: 'Đã hiểu'
-            });
+            // Nhắc nhở tinh tế nếu họ tải lại video đang làm dở
+            const linkFB = document.getElementById('linkFB').value;
+            if(linkFB === "") {
+                Swal.fire({
+                    title: "Trạm Tải Video",
+                    html: `
+                        <div class="mb-4">
+                            <!-- Bật playsinline để iPhone không phóng to chiếm quyền -->
+                            <video src="${currentTask.linkR2}" controls playsinline class="w-full rounded-lg bg-black"></video>
+                        </div>
+                        <div class="text-left text-sm text-gray-600 bg-gray-100 p-3 rounded-lg border border-gray-300">
+                            <p class="mb-2"><b>🍎 iPhone/iPad:</b> Bấm Play, sau đó <b>chạm giữ 2 giây</b> vào video -> Chọn <b>Lưu Video</b> 📥</p>
+                            <p><b>🤖 Android:</b> Bấm vào biểu tượng <b>⋮</b> góc dưới video -> Chọn <b>Tải xuống</b>.</p>
+                        </div>
+                    `,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                });
+            }
         }
 
         function copyCaption() {
@@ -235,10 +264,12 @@
                     localStorage.setItem("video1000_credit", data.newCredit);
                     document.getElementById('creditScore').innerText = data.newCredit;
                     document.getElementById('linkFB').value = '';
-                    Swal.fire("Hoàn tất!", "Đã trừ 2 điểm và dọn dẹp không gian.", "success");
+                    
+                    Swal.fire("Hoàn tất!", "Đã nộp bài thành công. Hệ thống đang lấy video tiếp theo...", "success");
                     
                     currentTask = null;
-                    loadRealTask();
+                    highlightSubmitSection(false); // Tắt viền sáng
+                    loadRealTask(); // Bốc video mới
                 } else {
                     Swal.fire("Lỗi", "Không thể nộp bài", "error");
                 }
